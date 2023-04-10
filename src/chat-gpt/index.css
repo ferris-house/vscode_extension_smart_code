@@ -1,0 +1,41 @@
+.chat-box{
+	width: auto !important;
+	position: fixed;
+	left: 10px;
+	right: 10px;
+	bottom: 10px;
+	background-color: rgb(57, 57, 57);
+}
+
+.chat-list{
+	padding-right: 10px;
+}
+
+.ask-message{
+	padding: 10px;
+	margin-bottom: 10px;
+	background-color: rgb(45, 45, 45);
+}
+
+.ask-message-content{
+	margin-bottom: 10px;
+}
+
+.ask-message-content--selection{
+	max-width: 100%;
+	overflow-x: scroll;
+	overflow-y: hidden;
+	white-space: nowrap;
+	color:rgb(248, 196, 6);
+}
+
+.identity{
+	margin-bottom: 20px;
+	font-weight: 800;
+}
+
+.gpt-message{
+	padding: 10px;
+	margin-bottom: 10px;
+}
+
