@@ -71,12 +71,12 @@ class ChatGPTViewProvider implements vscode.WebviewViewProvider {
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
 		// Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
-		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'src/chat-gpt', 'index.js'));
+		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'index.js'));
 		// Do the same for the stylesheet.
-		const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'src/chat-gpt', 'reset.css'));
-		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'src/chat-gpt', 'vscode.css'));
-		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'src/chat-gpt', 'index.css'));
-		const iconfontUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'src/chat-gpt', 'iconfont.css'));
+		const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'reset.css'));
+		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'vscode.css'));
+		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'index.css'));
+		const iconfontUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'iconfont.css'));
 
 		// const diskPath = vscode.Uri.file(path.join(this._extensionUri.path, 'resources/send.png'));
 		// console.log('diskPath', diskPath);

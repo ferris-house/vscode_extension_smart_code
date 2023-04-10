@@ -1,9 +1,10 @@
 {
-  "name": "code_optimization",
+  "name": "codeoptimization",
   "displayName": "代码优化",
   "description": "基于chatgpt，实现代码解析、代码修复",
   "publisher": "ferris",
-  "version": "0.0.1",
+  "version": "0.0.3",
+  "repository": "https://github.com/code-is-mylife/extension_code_optimization",
   "engines": {
     "vscode": "^1.77.0"
   },
