@@ -1,7 +1,23 @@
 (function () {
     const vscode = acquireVsCodeApi();
+    marked.setOptions({
+        renderer: new marked.Renderer(),
+        gfm: true,
+        tables: true,
+        breaks: false,
+        pedantic: false,
+        sanitize: false,
+        smartLists: true,
+        smartypants: false,
+        highlight: function (code, lang) {
+            //使用 highlight 插件解析文档中代码部分
+            return hljs.highlightAuto(code, [lang]).value;
+        }
+    });
+
     const input = document.querySelector('.chat-box');
     const ul = document.querySelector('.chat-list');
+    const selectionBox = document.querySelector('.selection');
 
     function addAskMessage(value, fromSelection = false) {
         const p1 = document.createElement('p');
@@ -38,6 +54,12 @@
         ul?.appendChild(li);
     }
 
+    function addSelection(selection) {
+        console.log(selection);
+        const content = '```' + 'javascript' + '\n' + selection + '\n```';
+        selectionBox.innerHTML = marked.parse(content);
+    }
+
     // @ts-ignore
     document.querySelector('.chat-box').addEventListener('input', (e) => {
         content = e.target.value;
@@ -53,7 +75,8 @@
         const { data } = event;
         switch (data.type) {
             case 'selection':
-                addAskMessage(data.content, true);
+                // addAskMessage(data.content, true);
+                addSelection(data.content);
                 break;
             case 'chatGPTResult':
                 addGPTMessage(data.content);

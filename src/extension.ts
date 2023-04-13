@@ -5,25 +5,40 @@ const path = require('path');
 export function activate(context: vscode.ExtensionContext) {
 	console.log('插件被激活～');
 	const provider = new ChatGPTViewProvider(context.extensionUri);
+	const webviewProvider = vscode.window.registerWebviewViewProvider(ChatGPTViewProvider.viewId, provider);
+
+	const selection = vscode.commands.registerTextEditorCommand(
+		'extension.smartcode.webview.selection',
+		async ({ document, selection, options, selections }) => {
+			const doc = await vscode.workspace.openTextDocument(document.uri);
+			const text = doc.getText(selection);
+			console.log(text);
+			provider.sendMessage(text.replace(/[\r\n]/g, ''));
+
+			// const res = await vscode.window.showInputBox({
+			// 	password: false, // 输入内容是否是密码
+			// 	ignoreFocusOut: true, // 默认false，设置为true时鼠标点击别的地方输入框不会消失
+			// 	placeHolder: '提示信息', // 在输入框内的提示信息
+			// 	prompt: '', // 在输入框下方的提示信息
+			// });
+		}
+	);
+
+	vscode.window.onDidChangeTextEditorSelection((event) => {
+		const editor = vscode.window.activeTextEditor!;
+		const selected = editor.document.getText(event.textEditor.selection);
+		provider.setSelection(selected);
+	});
+
 
 	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(ChatGPTViewProvider.viewId, provider));
-
-	context.subscriptions.push(
-		vscode.commands.registerTextEditorCommand(
-			'extension.code.optimization.webview.selection',
-			async ({ document, selection, options, selections }) => {
-				const doc = await vscode.workspace.openTextDocument(document.uri);
-				const text = doc.getText(selection);
-				console.log(text);
-				provider.sendMessage(text.replace(/[\r\n]/g, ''));
-			}
-		)
+		webviewProvider,
+		selection
 	);
 }
 
 class ChatGPTViewProvider implements vscode.WebviewViewProvider {
-	public static readonly viewId = 'extension.code.optimization.webview';
+	public static readonly viewId = 'extension.smartcode.webview';
 	private _view?: vscode.WebviewView;
 
 	constructor(
@@ -53,6 +68,10 @@ class ChatGPTViewProvider implements vscode.WebviewViewProvider {
 		});
 	}
 
+	public setSelection(selection: string) {
+		this._view?.webview.postMessage({ type: 'selection', content: selection });
+	}
+
 	async getChatGPTResult(content: string) {
 		const { data } = await axios.post(`http://localhost:2000/user/info`, { ask: content });
 		// console.log(data);
@@ -64,50 +83,46 @@ class ChatGPTViewProvider implements vscode.WebviewViewProvider {
 			this._view?.show?.(true);
 			this._view?.webview.postMessage({ type: 'selection', content: text });
 		} else {
-			await vscode.commands.executeCommand("extension.code.optimization.webview.focus");
+			await vscode.commands.executeCommand("extension.smartcode.webview.focus");
 			setTimeout(() => this._view?.webview.postMessage({ type: 'selection', content: text }), 300);
 		}
 	}
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
-		// Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
-		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'index.js'));
-		// Do the same for the stylesheet.
-		const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'reset.css'));
-		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'vscode.css'));
-		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'index.css'));
-		const iconfontUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'iconfont.css'));
+		const indexUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'index.js'));
+		const tailwindUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "scripts", "tailwind.min.js"));
+		const markeddUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "scripts", "marked.min.js"));
+		const highlightUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "scripts", "highlight.min.js"));
 
-		// const diskPath = vscode.Uri.file(path.join(this._extensionUri.path, 'resources/send.png'));
-		// console.log('diskPath', diskPath);
-		// const aaa = diskPath.with({ scheme: 'vscode-resource' });
-		// console.log(aaa);
+		const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'css', 'reset.css'));
+		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'css', 'vscode.css'));
+		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'css', 'index.css'));
+		const iconfontUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'madia', 'css', 'iconfont.css'));
 
-		// Use a nonce to only allow a specific script to be run.
+		console.log(markeddUri);
+
 		const nonce = getNonce();
 
 		return `<!DOCTYPE html>
 			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<!--
-					Use a content security policy to only allow loading styles from our extension directory,
-					and only allow scripts that have a specific nonce.
-					(See the 'webview-sample' extension sample for img-src content security policy examples)
-				-->
-				<meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<link href="${styleResetUri}" rel="stylesheet">
-				<link href="${styleVSCodeUri}" rel="stylesheet">
-				<link href="${styleMainUri}" rel="stylesheet">
-				<link href="${iconfontUri}" rel="stylesheet">
-				<title>Cat Colors</title>
-			</head>
-			<body>
-				<ul class="chat-list"></ul>
-				<input class="chat-box" placeholder="请输入问题..."/>
-				<script nonce="${nonce}" src="${scriptUri}"></script>
-			</body>
+				<head>
+					<meta charset="UTF-8">
+					<meta name="viewport" content="width=device-width, initial-scale=1.0">
+					<link href="${styleResetUri}" rel="stylesheet">
+					<link href="${styleVSCodeUri}" rel="stylesheet">
+					<link href="${styleMainUri}" rel="stylesheet">
+					<link href="${iconfontUri}" rel="stylesheet">
+					<title>smartcode</title>
+				</head>
+				<body>
+					<div class="selection">
+					<ul class="chat-list"></ul>
+					<input class="chat-box" placeholder="请输入问题..."/>
+				</body>
+				<script src="${tailwindUri}"></script>
+				<script src="${highlightUri}"></script>
+				<script src="${markeddUri}"></script>
+				<script src="${indexUri}"></script>
 			</html>`;
 	}
 }
