@@ -7,6 +7,10 @@
 	background-color: rgb(57, 57, 57);
 }
 
+.chat-box-mat{
+	height: 35px;
+}
+
 .chat-list{
 	padding-right: 10px;
 }
@@ -37,5 +41,17 @@
 .gpt-message{
 	padding: 10px;
 	margin-bottom: 10px;
+	position: relative;
+}
+
+.copy-btn, .insert-btn{
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	color: #fff;
+}
+
+.copy-btn{
+	right: 30px;
 }
 
